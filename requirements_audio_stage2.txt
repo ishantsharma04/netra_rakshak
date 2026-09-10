@@ -1,0 +1,9 @@
+flask
+opencv-python
+ultralytics
+numpy
+pytesseract
+sounddevice
+transformers
+torch
+safetensors

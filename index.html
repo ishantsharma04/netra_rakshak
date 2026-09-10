@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>IBVAP | Real AI Prototype</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#08111f;color:#e8eef7;font:14px Arial}.head{padding:17px 24px;background:#0d192b;border-bottom:1px solid #26364f;display:flex;justify-content:space-between}.brand{font-size:22px;font-weight:bold}.brand span{color:#38bdf8}.green{color:#4ade80}.yellow{color:#facc15}.red{color:#fb7185}.layout{display:flex;min-height:calc(100vh - 65px)}aside{width:205px;background:#0a1525;padding:18px}aside div{padding:11px;color:#9eafc4;border-radius:7px;margin:4px 0}.active{background:#19283d;color:white!important}main{padding:22px;flex:1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}button{background:#087fbd;color:#fff;border:0;border-radius:7px;padding:10px 13px;cursor:pointer}input{display:none}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}.card,.panel{background:#0e1a2b;border:1px solid #26364f;border-radius:10px}.card{padding:14px}.card small{color:#8497af}.num{font-size:24px;font-weight:bold;margin:8px 0}.grid{display:grid;grid-template-columns:2fr 1fr;gap:15px;margin-top:15px}.ph{padding:14px;border-bottom:1px solid #26364f;font-weight:bold;display:flex;justify-content:space-between}.video{background:#02070d;min-height:450px;display:flex;align-items:center;justify-content:center}.video img{width:100%;display:block}.alerts{max-height:450px;overflow:auto}.alert{padding:13px;border-bottom:1px solid #26364f;display:flex;gap:9px}.alert small{display:block;color:#8497af;margin-top:4px}.badge{margin-left:auto;height:max-content;padding:4px 7px;border-radius:12px;font-size:9px}.high{background:#461b25;color:#fb7185}.medium{background:#44370d;color:#facc15}.low{background:#123620;color:#4ade80}.bottom{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:15px;margin-top:15px}.row{padding:10px 14px;border-bottom:1px solid #26364f;display:flex;justify-content:space-between;font-size:12px}.hint{color:#8294ab;font-size:11px;padding:12px 14px;line-height:1.5}
+.anpr{padding:10px 14px;border-bottom:1px solid #26364f}
+.anpr strong{font-size:18px;letter-spacing:1px}
+.anpr small{display:block;color:#8497af;margin-top:4px}
+@media(max-width:950px){aside{display:none}.cards{grid-template-columns:repeat(3,1fr)}.grid,.bottom{grid-template-columns:1fr}}@media(max-width:600px){.cards{grid-template-columns:1fr 1fr}main{padding:12px}}
+</style></head><body>
+<header class="head"><div><div class="brand">IBVAP <span>●</span></div><small>Intelligent Border Video Analytics Platform</small></div><div id="status" class="green">● SYSTEM ONLINE</div></header>
+<div class="layout"><aside><div class="active">▦ Dashboard</div><div>◉ Live AI Camera</div><div>⚠ Alerts</div><div>⌖ Threat Map</div><div>▣ ANPR Module</div><div>◌ Face Detection</div><div>◈ Analytics</div><hr><div>▤ Camera Health</div></aside>
+<main>
+<div class="actions"><button onclick="offline()">Test Offline Mode</button><button onclick="document.getElementById('file').click()">Upload CCTV Video</button><input id="file" type="file" accept="video/*" onchange="uploadVideo()"><button onclick="clearEvents()">Clear Events</button></div>
+<section class="cards">
+<div class="card"><small>AI ENGINE</small><div class="num green">READY</div><small>YOLO + OpenCV</small></div>
+<div class="card"><small>DETECTION</small><div id="det" class="num cyan">LIVE</div><small>Real-time video analysis</small></div>
+<div class="card"><small>THREAT SCORE</small><div id="score" class="num yellow">64/100</div><small>Dynamic assessment</small></div>
+<div class="card"><small>NETWORK</small><div id="net" class="num green">ONLINE</div><small>Edge processing</small></div>
+<div class="card"><small>HEALTH</small><div class="num cyan">92%</div><small>Prototype status</small></div>
+</section>
+<div class="grid"><section class="panel"><div class="ph">Live AI CCTV <span class="green">● PROCESSING</span></div><div class="video"><img src="/video" alt="AI CCTV stream"></div><div class="hint">Blue/green boxes = detected objects. Red box = restricted-zone intrusion. The dashed red area is the virtual fence.</div></section>
+<section class="panel"><div class="ph">Real-Time Events <span id="alarm" class="red">🚨 0</span></div><div id="events" class="alerts"><div class="hint">Waiting for AI events...</div></div></section></div>
+<div class="bottom">
+<section class="panel"><div class="ph">Surveillance Health</div><div class="row">Camera Feed <span class="green">● OK</span></div><div class="row">AI Engine <span class="green">● Running</span></div><div class="row">Lens Status <span class="yellow">● Demo</span></div><div class="row">Storage <span class="green">● Ready</span></div></section>
+<section class="panel"><div class="ph">Threat Map</div><div class="hint" style="height:170px;display:flex;align-items:center;justify-content:center;font-size:18px">🟢 BOP-01 &nbsp; 🔴 BOP-04 &nbsp; 🟡 BOP-07</div></section>
+<section class="panel"><div class="ph">ANPR Module <span id="anprStatus" class="yellow">CHECKING</span></div><div id="anprResults"><div class="hint">Waiting for number-plate detections...</div></div></section>
+<section class="panel"><div class="ph">Intelligence Modules</div><div class="row">Human Tracking <span class="green">ACTIVE</span></div><div class="row">Vehicle Detection <span class="green">ACTIVE</span></div><div class="row">Virtual Fence <span class="green">ACTIVE</span></div><div class="row">Night Detection <span class="green">READY</span></div><div class="row">ANPR / OCR <span class="green">ACTIVE</span></div></section>
+</div></main></div>
+<script>
+let last=0;
+async function refresh(){let r=await fetch('/events');let d=await r.json();let a=document.getElementById('events');document.getElementById('alarm').textContent='🚨 '+d.events.filter(x=>x.severity==='HIGH').length;
+if(!d.events.length){a.innerHTML='<div class="hint">Waiting for AI events...</div>';return}
+a.innerHTML=d.events.map(x=>`<div class="alert"><span>${x.severity==='HIGH'?'🚨':x.severity==='MEDIUM'?'⚠️':'ℹ️'}</span><div><b>${x.kind}</b><small>${x.detail} • ${x.time}</small></div><span class="badge ${x.severity==='HIGH'?'high':x.severity==='MEDIUM'?'medium':'low'}">${x.severity}</span></div>`).join('');
+if(d.events.length!==last){last=d.events.length; if(d.events[0].severity==='HIGH'){document.getElementById('score').textContent='87/100';document.getElementById('score').className='num red'}}
+refreshANPR();
+}
+async function refreshANPR(){
+  let r=await fetch('/events'); let d=await r.json();
+  let list=d.events.filter(x=>x.kind==='ANPR Detection').slice(0,5);
+  let box=document.getElementById('anprResults');
+  if(!list.length){box.innerHTML='<div class="hint">Waiting for number-plate detections...</div>';return}
+  box.innerHTML=list.map(x=>{
+    let m=x.detail.match(/^(.+?) detected on (.+)$/);
+    let plate=m?m[1]:x.detail;
+    let vehicle=m?m[2].toUpperCase():'VEHICLE';
+    return `<div class="anpr"><strong>${plate}</strong><small>${vehicle} • ${x.time} • OCR detected</small></div>`;
+  }).join('');
+}
+async function checkANPR(){
+  try{
+    let r=await fetch('/anpr-status'); let d=await r.json();
+    let s=document.getElementById('anprStatus');
+    s.textContent=d.tesseract?'● OCR READY':'● OCR NOT FOUND';
+    s.className=d.tesseract?'green':'red';
+  }catch(e){
+    let s=document.getElementById('anprStatus'); s.textContent='● ERROR'; s.className='red';
+  }
+}
+async function offline(){let r=await fetch('/offline',{method:'POST'});let d=await r.json();let n=document.getElementById('net'),s=document.getElementById('status');n.textContent=d.offline?'OFFLINE':'ONLINE';n.className='num '+(d.offline?'yellow':'green');s.textContent=d.offline?'● OFFLINE • EDGE AI ACTIVE':'● SYSTEM ONLINE';s.className=d.offline?'yellow':'green';refresh()}
+async function uploadVideo(){let f=document.getElementById('file').files[0];if(!f)return;let fd=new FormData();fd.append('video',f);await fetch('/upload',{method:'POST',body:fd});refresh()}
+async function clearEvents(){await fetch('/clear',{method:'POST'});last=0;refresh()}
+setInterval(refresh,1000);refresh();checkANPR();
+</script></body></html>
